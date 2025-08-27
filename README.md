@@ -3,126 +3,133 @@
 
 ## Overview
 
-This is a **simple CRUD (Create, Read, Update, Delete) application** built with **Golang** and **Gorilla Mux**.
-The project is designed to help understand **RESTful APIs** and practice backend development.
+This is a **simple CRUD (Create, Read, Update, Delete) application** built with **Golang**, **MySQL**, and following **Clean Architecture principles**.
+The project is designed to help understand **RESTful APIs**, **layered architecture**, and practice backend development.
 
-* **Language:** Go
-* **Framework:** Gorilla Mux
-* **Purpose:** Learn API design, routing, and basic CRUD operations
+**Tech Stack:**
+
+* **Language:** Go 1.21+
+* **Framework:** Gorilla Mux (for routing)
+* **Database:** MySQL
+* **Purpose:** Learn API design, routing, CRUD operations, and environment-based configuration
 
 ---
 
 ## Features
 
 * **Create** new tasks
-* **Read** all tasks or a single task by ID
+* **Read** all tasks or a single task by resource ID
 * **Update** existing tasks
-* **Delete/Update status** of tasks
-* Clean and simple structure for learning purposes
+* **Soft Delete** / update status of tasks
+* Clean and maintainable structure (`domain`, `usecases`, `repositories`, `services`, `transport`)
+* Environment-based configuration using `.env` file
 
 ---
 
-## Installation
+## Installation & Setup
 
-1. Clone the repository:
-
-```bash
-git clone https://github.com/your-username/simple-crud-api.git
-```
-
-2. Navigate to the project directory:
+### 1️⃣ Clone the repository
 
 ```bash
-cd simple-crud-api
+git clone https://github.com/your-username/task-management-api.git
+cd task-management-api
 ```
 
-3. Run the application:
+### 2️⃣ Install dependencies
+
+```bash
+go mod tidy
+```
+
+### 3️⃣ Setup MySQL database
+
+* Install & run MySQL server.
+* Create a database:
+
+```sql
+CREATE DATABASE taskDB;
+```
+
+* Create the `tasks` table:
+
+```sql
+CREATE TABLE tasks (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    resource_id VARCHAR(100) UNIQUE NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    description TEXT NOT NULL,
+    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    status CHAR(1) DEFAULT 'A'
+);
+```
+
+### 4️⃣ Configure environment variables
+
+* Copy the example `.env` file:
+
+```bash
+cp .env.example .env
+```
+
+* Update `.env` with your database credentials:
+
+```env
+DB_USER=root
+DB_PASS=yourpassword
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_NAME=taskDB
+DB_LOC=Asia%2FColombo
+APP_PORT=8081
+```
+
+> **Note:** `DB_LOC` should be URL-encoded (`Asia%2FColombo` → "Asia/Colombo").
+> `.env` file should **not** be committed to GitHub. Keep `.env.example` for reference.
+
+---
+
+## Running the Application
 
 ```bash
 go run main.go
 ```
 
-The server will start at `http://localhost:8080` by default.
+If successful, you should see:
+
+```
+✅ Database connected successfully!
+🚀 Server started at :8081
+```
+
+Visit the API in your browser or via Postman at [http://localhost:8081](http://localhost:8081)
 
 ---
 
 ## API Endpoints
 
-| Method | Endpoint                      | Description                        |
-| ------ | ----------------------------- | ---------------------------------- |
-| POST   | `/tasks`                      | Create a new task                  |
-| GET    | `/tasks`                      | Get all tasks                      |
-| GET    | `/tasks/{resource_id}`        | Get a task by its resource ID      |
-| PATCH  | `/tasks/{resource_id}`        | Update a task’s details            |
-| PATCH  | `/tasks/{resource_id}/status` | Update task status or mark deleted |
-
-**Notes:**
-
-* `{resource_id}` is a **path parameter** used to identify a specific task.
-* The API follows **REST principles** for simplicity and scalability.
+| Method | Endpoint                      | Description                      |
+| ------ | ----------------------------- | -------------------------------- |
+| POST   | `/tasks`                      | Create a new task                |
+| GET    | `/tasks`                      | Get all tasks                    |
+| GET    | `/tasks/{resource_id}`        | Get task by resource ID          |
+| PUT    | `/tasks/{resource_id}`        | Update task                      |
+| PATCH  | `/tasks/{resource_id}/status` | Update task status (soft delete) |
 
 ---
 
-## Usage
+## Testing
 
-You can test the API using **Postman**, **curl**, or any API testing tool.
-
-**Example using curl:**
-
-* Create a task:
+Run unit tests:
 
 ```bash
-curl -X POST http://localhost:8080/tasks -d '{"title":"My Task","description":"This is a test"}' -H "Content-Type: application/json"
+go test ./...
 ```
-
-* Get all tasks:
-
-```bash
-curl http://localhost:8080/tasks
-```
-
-* Get a task by ID:
-
-```bash
-curl http://localhost:8080/tasks/1
-```
-
-* Update a task:
-
-```bash
-curl -X PATCH http://localhost:8080/tasks/1 -d '{"title":"Updated Task"}' -H "Content-Type: application/json"
-```
-
-* Update task status:
-
-```bash
-curl -X PATCH http://localhost:8080/tasks/1/status -d '{"status":"completed"}' -H "Content-Type: application/json"
-```
-
----
-
-## Project Structure
-
-```
-simple-crud-api/
-│
-├─ main.go           # Entry point of the application
-├─ transport/
-│   └─ router.go     # API routes using Gorilla Mux
-├─ endpoints/
-│   └─ task_handler.go  # Handlers for API endpoints
-└─ models/           # Optional: data models for tasks
-```
-
----
-
-## Contributing
-
-* Fork the repository, make your changes, and create a pull request.
-* Feel free to experiment with features or improve code structure.
 
 ---
 
 ## License
 
-This project is open source and available under the [MIT License](LICENSE).
+This project is available under the [MIT License](LICENSE).
+
+-
