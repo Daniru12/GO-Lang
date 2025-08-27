@@ -5,18 +5,32 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	_ "github.com/go-sql-driver/mysql"
-
-	"patricego/repositories/mysql"
-	"patricego/services"
-	"patricego/transport"
-	"patricego/transport/endpoints"
-	"patricego/usecases"
+	"github.com/joho/godotenv"
 )
-func main() {
 
-	dsn := "root:Punsith12@tcp(127.0.0.1:3306)/taskDB?parseTime=true&loc=Asia%2FColombo"
+func main() {
+	
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
+
+	dbUser := os.Getenv("DB_USER")
+	dbPass := os.Getenv("DB_PASS")
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbName := os.Getenv("DB_NAME")
+	dbLoc := os.Getenv("DB_LOC")
+	appPort := os.Getenv("APP_PORT")
+
+
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=%s",
+		dbUser, dbPass, dbHost, dbPort, dbName, dbLoc)
+
+
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		log.Fatalf("Failed to connect to DB: %v", err)
@@ -28,16 +42,13 @@ func main() {
 		log.Fatalf("Database is not reachable: %v", err)
 	}
 
-	fmt.Println(" Database connected successfully!")
+	fmt.Println("Database connected successfully!")
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello! Database connected successfully 🚀")
+	})
 
 	
-	taskRepo := mysql.NewTaskRepository(db)
-	taskUsecase := usecases.NewTaskUsecase(taskRepo)
-	taskService := services.NewTaskService(taskUsecase)
-	taskHandler := endpoints.NewTaskHandler(taskService)
-
-	router := transport.NewRouter(taskHandler)
-
-	fmt.Println(" Server started at :8081")
-	log.Fatal(http.ListenAndServe(":8081", router))
+	fmt.Printf("Server started at :%s\n", appPort)
+	log.Fatal(http.ListenAndServe(":"+appPort, nil))
 }
